@@ -6,6 +6,7 @@ import { getAllPosts } from "@/data/post";
 
 export const getStaticPaths = (async () => {
 	const blogEntries = await getAllPosts();
+
 	return blogEntries.map((entry) => ({
 		params: { slug: entry.slug },
 		props: { entry },
