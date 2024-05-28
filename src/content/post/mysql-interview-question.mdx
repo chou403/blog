@@ -27,7 +27,7 @@ MYSQL InnoDB二级索引存储主键值而不是存储行指针的优点与缺�
 
 ### InnoDB 简介
 
-InnoDB是一个将表中的数据存储到磁盘上的存储引擎。而真正处理数据的过程是发生在内存中的,所以需要把磁盘中的数据加载到内存中,如果是处理写入或修改请求的话,还需要把内存中的内容刷新到磁盘上。而我们知道读写磁盘的速度非常慢,和内存读写差了几个数量级。所以当我们想从表中获取某些记录时,InnoDB存储引擎需要一条一条的把记录从磁盘上读出来么？想要了解这个问题,我们首先需要了解InnoDB的存储结构是怎样的。
+InnoDB是一个将表中的数据存储到磁盘上的存储引擎。而真正处理数据的过程是发生在内存中的,所以需要把磁盘中的数据加载到内存中,如果是处理写入或修改请求的话,还需要把内存中的内容刷新到磁盘上。而我们知道读写磁盘的速度非常慢,和内存读写差了几个数量级。所以当我们想从表中获取某些记录时,InnoDB存储引擎需要一条一条的把记录从磁盘上读出来么?想要了解这个问题,我们首先需要了解InnoDB的存储结构是怎样的。
 
 ![image-20230703165807448](https://cdn.jsdelivr.net/gh/chou401/pic-md@main/img/image-20230703165807448.png)
 
@@ -108,7 +108,7 @@ mysql5.0之前默认的行格式是redundant,mysql5.0之后的默认行格式为
 
 我们使用如下的sql语句插入几行数据:
 
-```mysql
+```sql
 INSERT INTO page_demo
 VALUES
 (1, 100, 'aaaa'),
@@ -141,7 +141,7 @@ B+树的每层非叶子节点中的最小记录都会添加该标记。上方插
 
 在数据页的User Records中插入的记录是一条一条紧凑的排列的,这种紧凑排列的结构又被称为**堆**。为了便于管理这个堆,把记录在堆中的相对位置给定一个编号——heap_no。所以heap_no这个属性表示当前记录在本页中的位置。
 
-在例子中,插入的4条记录在本页中的位置分别是:  2 、3 、4 、5。为什么没有0和1呢？
+在例子中,插入的4条记录在本页中的位置分别是:  2 、3 、4 、5。为什么没有0和1呢?
 
 是因为每个页里面加了两个记录,这两个记录并不是我们自己插入的,所以有时候也称为**伪记录**或者**虚拟记录**。这两个伪记录一个代表**最小记录** Infimum,一个代表**最大记录**Supremum,对应的heap_no分别为0和1。
 
@@ -171,7 +171,7 @@ B+树的每层非叶子节点中的最小记录都会添加该标记。上方插
 
 如果从中删除掉一条记录,这个链表也是会跟着变化的,比如我们把第2条记录删掉:
 
-```mysql
+```sql
 DELETE FROM page_demo WHERE c1 = 2;
 ```
 
@@ -207,7 +207,7 @@ roll_pointer 是一个指向记录对应的 undo日志 的一个指针。
 
 我们知道对于 VARCHAR(M) 类型的列最多可以占用 65535 个字节。其中的 M 代表该类型最多存储的字符数量,如果我们使用 ascii 字符集的话,一个字符就代表一个字节。但是实际上,创建一张表并设置一个字段为`VARCHAR(65535)`则会报错。
 
-```mysql
+```sql
 CREATE TABLE varchar_size_demo(
     c VARCHAR(65535)
 ) CHARSET=ascii ROW_FORMAT=Compact;
@@ -286,9 +286,9 @@ compressed 格式将会在Dynamic 的基础上面进行压缩处理特别是对�
 
 ### Page Directory(页目录)
 
-记录在页中按照主键值由小到大顺序串联成一个单链表,那如果我们想根据主键值查找页中的某条记录该咋办呢？比如说这样的查询语句:
+记录在页中按照主键值由小到大顺序串联成一个单链表,那如果我们想根据主键值查找页中的某条记录该咋办呢?比如说这样的查询语句:
 
-```mysql
+```sql
 SELECT * FROM page_demo WHERE c1 = 3;
 ```
 
@@ -313,7 +313,7 @@ SELECT * FROM page_demo WHERE c1 = 3;
 
 往表里继续插入数据
 
-```mysql
+```sql
 INSERT INTO page_demo VALUES(5, 500, 'eeee'), (6, 600, 'ffff'), (7, 700, 'gggg'),(8, 800, 'hhhh'), (9, 900, 'iiii'), (10, 1000, 'jjjj'), (11, 1100, 'kkkk'), (12, 1200, 'llll'), (13, 1300, 'mmmm'), (14, 1400, 'nnnn'), (15, 1500, 'oooo'), (16, 1600, 'pppp');
 ```
 
@@ -396,7 +396,7 @@ Page Header 是专门针对数据页记录的各种状态信息,比方说页里�
 
 ### File Trailer(文件尾部)
 
-InnoDB 存储引擎会把数据存储到磁盘上,但是磁盘速度太慢,需要以页为单位把数据加载到内存中处理,如果该页中的数据在内存中被修改了,那么在修改后的某个时间需要把数据同步到磁盘中。但是在同步了一半的时候中断电了咋办,这不是莫名尴尬么？为了检测一个页是否完整(也就是在同步的时候有没有发生只同步一半的尴尬情况),在每个页的尾部都加了一个File Trailer 部分,这个部分由8 个字节组成,可以分成2个小部分:
+InnoDB 存储引擎会把数据存储到磁盘上,但是磁盘速度太慢,需要以页为单位把数据加载到内存中处理,如果该页中的数据在内存中被修改了,那么在修改后的某个时间需要把数据同步到磁盘中。但是在同步了一半的时候中断电了咋办,这不是莫名尴尬么?为了检测一个页是否完整(也就是在同步的时候有没有发生只同步一半的尴尬情况),在每个页的尾部都加了一个File Trailer 部分,这个部分由8 个字节组成,可以分成2个小部分:
 
 - 前4个字节代表页的校验和
 
@@ -444,11 +444,11 @@ InnoDB 存储引擎会把数据存储到磁盘上,但是磁盘速度太慢,需�
 
 缓冲页和控制块是一一对应的,其中控制块在buffer pool前面,而缓冲页在buffer后面。
 
-**什么是碎片？**
+**什么是碎片?**
 
 当剩余空间不够一对控制块和缓冲页的大小时,这样的空间称为碎片。
 
-**怎么查看MySQL实例的Buffer Pool信息呢？**
+**怎么查看MySQL实例的Buffer Pool信息呢?**
 
 `show variables like '%innodb_buffer_pool_size%';` 查看buffer pool的size。
 
@@ -472,7 +472,7 @@ InnoDB 存储引擎会把数据存储到磁盘上,但是磁盘速度太慢,需�
 
 在有了free链表之后,当需要加载磁盘中的页到buffer pool中时,就去free链表中取一个空闲页所对应的控制块信息,**根据控制块信息中的表空间号、页号找到buffer pool里对应的缓冲页,再将数据加载到该缓冲页中,随后删掉free链表该控制块信息对应的节点。**
 
-**如何在buffer pool中快速查找缓冲页(数据页)呢？**
+**如何在buffer pool中快速查找缓冲页(数据页)呢?**
 
 这里就可以对缓冲页进行Hash处理,用表空间号、页号做为Key,缓冲页的控制块就是value**维护一个Hash表,**根据表空间号、页号做为Key去查找有没有对应的缓冲信息,如果没有就需要去free 链表中取一个空闲的缓冲页控制快信息,随后将磁盘中的数据加载到该缓冲页位置。
 
@@ -526,7 +526,7 @@ Buffer Pool的LRU算法中InnoDB 将LRU链表按照5:3的比例分成了young区
 
 ##### 修改Buffer Pool大小
 
-**如何修改运行中MySQL的Buffer Pool的大小？**
+**如何修改运行中MySQL的Buffer Pool的大小?**
 
 **MySQL 5.7.5之前**: 是不允许在运行时调整buffer pool大小的,只能在服务器启动之前,通过innodb_buffer_pool_size大小来调整。
 
@@ -540,7 +540,7 @@ Buffer Pool的LRU算法中InnoDB 将LRU链表按照5:3的比例分成了young区
 
 当我们在批量读取数据的时候,由于数据被访问了一次,这些大量数据都会被加入到「活跃 LRU 链表」里,然后之前缓存在活跃 LRU 链表(或者 young 区域)里的热点数据全部都被淘汰了,**如果这些大量的数据在很长一段时间都不会被访问的话,那么整个活跃 LRU 链表(或者 young 区域)就被污染了**。
 
-##### 缓存污染会带来什么问题？
+##### 缓存污染会带来什么问题?
 
 缓存污染带来的影响就是很致命的,等这些热数据又被再次访问的时候,由于缓存未命中,就会产生大量的磁盘 I/O,系统性能就会急剧下降。
 
@@ -575,7 +575,7 @@ select * from t_user where name like "%xiaolin%";
 
 如果 6 和 7 号页是热点数据,那么在被淘汰后,后续有 SQL 再次读取 6 和 7 号页时,由于缓存未命中,就要从磁盘中读取了,降低了 MySQL 的性能,这就是缓存污染带来的影响。
 
-##### 怎么避免缓存污染造成的影响？
+##### 怎么避免缓存污染造成的影响?
 
 前面的 LRU 算法只要数据被访问一次,就将数据加入活跃 LRU 链表(或者 young 区域),**这种 LRU 算法进入活跃 LRU 链表的门槛太低了**！正式因为门槛太低,才导致在发生缓存污染的时候,很容就将原本在活跃 LRU 链表里的热点数据淘汰了。
 
@@ -600,16 +600,16 @@ Linux 操作系统和 MySQL Innodb 存储引擎分别是这样提高门槛的:
 
 fload和double在存取时因为精度不一致会发生丢失,这里的丢失指的是扩展或者截断,丢失了原有的精度。
 
-在mysql中,我们用【小数数据类型(总长度,小数点长度)】来表示小数的总长度和小数点后面的长度,如deicmal(m,n)。n就是小数点后面的数字个数。float(m,n)、double(m,n) 含义差不多,都是定义长度和精度的。既然定义了精度,为什么还会发生所谓的精度丢失问题呢？
+在mysql中,我们用【小数数据类型(总长度,小数点长度)】来表示小数的总长度和小数点后面的长度,如deicmal(m,n)。n就是小数点后面的数字个数。float(m,n)、double(m,n) 含义差不多,都是定义长度和精度的。既然定义了精度,为什么还会发生所谓的精度丢失问题呢?
 
 float和double在**存取**时因为精度不一致会发生丢失,不能盲目的说float和double精度可能丢失。具体原因如下:
 
 1. **没有设置精度位数。**
    没有设置精度就是使用默认的精度,此时的策略就是,尽可能保证精度,因此一般使用最高精度存储数据。如果设置数据类型指定了精度,那么存储数据时就按照设置的精度来存储。例如,6.214522存入6位小数的float和double是不会丢失小数精度的,取出来的数还是6.214522。也就是说,一个小数存入相同的精度的数据类型时,精度是不会丢失的。
 2. **设置的精度和存储时的精度不一致。**
-   当7或更多位精度的数字存入6位精度类型字段时,会发生什么？结果会发生四舍五入。四舍五入的结果就是匹配字段的数据类型的精度长度。此时精度也会丢失。不管内部如何处理,我们得到的数据是经过四舍五入的。但是有一点可以确定,我们在读取取舍后的数字时,是固定的。虽然浮点数存储的不是确切的数值,但是在你指定的精度长度条件下,存取都是确定的一个数值。而发生精度变化的就是数值的精度和字段的精度长度不匹配,从而发生数值扩展精度和截断精度问题,这也就是浮点数精度不准确的问题。
+   当7或更多位精度的数字存入6位精度类型字段时,会发生什么?结果会发生四舍五入。四舍五入的结果就是匹配字段的数据类型的精度长度。此时精度也会丢失。不管内部如何处理,我们得到的数据是经过四舍五入的。但是有一点可以确定,我们在读取取舍后的数字时,是固定的。虽然浮点数存储的不是确切的数值,但是在你指定的精度长度条件下,存取都是确定的一个数值。而发生精度变化的就是数值的精度和字段的精度长度不匹配,从而发生数值扩展精度和截断精度问题,这也就是浮点数精度不准确的问题。
 3. **mysql数据库使用其他数据库引擎来查询。**
-   这个精度丢失的原因,就可能是不同的数据库引擎对浮点数的精度扩展和截断处理策略不一致,而且,存储时策略也不一致。所以导致精度会出现各种变化。这种问题也就是催生decimal类型的出现。我们前面看到的decimal是可以确切存储小数的精度的。因为在存储的时候会将小数以字符串存储,就不会再发生精度的扩展问题。但是decimal依然会发生精度截断问题。如果decimal指定精度为2位小数,存入的是这样的值: 12.123,你觉得结果如何？当然还是会发生四舍五入。结果就是12.12,然而12.12以字符串形式存入了数据库,此后,12.12始终都是12.12,变现出来的是小数,然而内部是字符串形式存储,所以,小数精度不会再发生变化了。我们不管以什么精度来获取这个值,都是12.12,而且,不管是一般数据库引擎读取到的也都是12.12,所以decimal才是大家推荐使用的金额存储类型。
+   这个精度丢失的原因,就可能是不同的数据库引擎对浮点数的精度扩展和截断处理策略不一致,而且,存储时策略也不一致。所以导致精度会出现各种变化。这种问题也就是催生decimal类型的出现。我们前面看到的decimal是可以确切存储小数的精度的。因为在存储的时候会将小数以字符串存储,就不会再发生精度的扩展问题。但是decimal依然会发生精度截断问题。如果decimal指定精度为2位小数,存入的是这样的值: 12.123,你觉得结果如何?当然还是会发生四舍五入。结果就是12.12,然而12.12以字符串形式存入了数据库,此后,12.12始终都是12.12,变现出来的是小数,然而内部是字符串形式存储,所以,小数精度不会再发生变化了。我们不管以什么精度来获取这个值,都是12.12,而且,不管是一般数据库引擎读取到的也都是12.12,所以decimal才是大家推荐使用的金额存储类型。
 
 浮点数类型是把十进制数转换成二进制数存储,decimal是把十进制的整数部分和小数部分拆开,分别装换成十六进制,进行存储。这样,所有的数值,就都可以精准表达了。
 
@@ -617,7 +617,7 @@ float和double在**存取**时因为精度不一致会发生丢失,不能盲目�
 
 #### 创建表
 
-```mysql
+```sql
 CREATE TABLE `user_operation_log`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
@@ -643,7 +643,7 @@ CREATE TABLE `user_operation_log`  (
 
 采用批量插入,效率会快很多,而且每1000条数就commit,数据量太大,也会导致批量插入效率慢
 
-```mysql
+```sql
 DELIMITER ;;
 CREATE PROCEDURE batch_insert_log()
 BEGIN
@@ -678,7 +678,7 @@ DELIMITER ;
 
 由于配置低,本次测试只准备了3148000条数据,占用了磁盘5G(还没建索引的情况下),跑了38min,电脑配置好的同学,可以插入多点数据测试
 
-```mysql
+```sql
 SELECT count(1) FROM `user_operation_log`
 ```
 
@@ -696,7 +696,7 @@ MySQL 支持 LIMIT 语句来选取指定的条数数据, Oracle 可以使用 ROW
 
 MySQL分页查询语法如下:
 
-```mysql
+```sql
 SELECT * FROM table LIMIT [offset,] rows | rows OFFSET offset
 ```
 
@@ -705,7 +705,7 @@ SELECT * FROM table LIMIT [offset,] rows | rows OFFSET offset
 
 下面我们开始测试查询结果:
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 10000, 10
 ```
 
@@ -721,7 +721,7 @@ SELECT * FROM `user_operation_log` LIMIT 10000, 10
 
 #### 相同偏移量,不同数据量
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 10000, 10
 SELECT * FROM `user_operation_log` LIMIT 10000, 100
 SELECT * FROM `user_operation_log` LIMIT 10000, 1000
@@ -745,7 +745,7 @@ SELECT * FROM `user_operation_log` LIMIT 10000, 1000000
 
 #### 相同数据量,不同偏移量
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 100, 100
 SELECT * FROM `user_operation_log` LIMIT 1000, 100
 SELECT * FROM `user_operation_log` LIMIT 10000, 100
@@ -763,7 +763,7 @@ SELECT * FROM `user_operation_log` LIMIT 1000000, 100
 
 从上面结果可以得出结束: **偏移量越大,花费时间越长**
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 100, 100
 SELECT id, attr FROM `user_operation_log` LIMIT 100, 100
 ```
@@ -778,7 +778,7 @@ SELECT id, attr FROM `user_operation_log` LIMIT 100, 100
 
 我们可以先定位偏移位置的 id,然后再查询数据
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 1000000, 10
 
 SELECT id FROM `user_operation_log` LIMIT 1000000, 1
@@ -807,7 +807,7 @@ id非递增的情况可以使用以下写法,但这种缺点是分页查询只�
 
 注意: 某些 mysql 版本不支持在 in 子句中使用 limit,所以采用了多个嵌套select
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` WHERE id IN (SELECT t.id FROM (SELECT id FROM `user_operation_log` LIMIT 1000000, 10) AS t)
 ```
 
@@ -815,7 +815,7 @@ SELECT * FROM `user_operation_log` WHERE id IN (SELECT t.id FROM (SELECT id FROM
 
 这种方法要求更高些,id必须是连续递增,而且还得计算id的范围,然后使用 between,sql如下
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` WHERE id between 1000000 AND 1000100 LIMIT 100
 
 SELECT * FROM `user_operation_log` WHERE id >= 1000000 LIMIT 100
@@ -835,7 +835,7 @@ _注意: 这里的 LIMIT 是限制了条数,没有采用偏移量_
 
 返回结果的数据量也会直接影响速度
 
-```mysql
+```sql
 SELECT * FROM `user_operation_log` LIMIT 1, 1000000
 
 SELECT id FROM `user_operation_log` LIMIT 1, 1000000
@@ -857,9 +857,9 @@ SELECT id, user_id, ip, op_data, attr1, attr2, attr3, attr4, attr5, attr6, attr7
 
 注意本人的 MySQL 服务器和客户端是在**同一台机器**上,所以查询数据相差不多,有条件的同学可以测测客户端与MySQL分开
 
-**SELECT \* 它不香吗？**
+**SELECT \* 它不香吗?**
 
-在这里顺便补充一下为什么要禁止 `SELECT *`。难道简单无脑,它不香吗？
+在这里顺便补充一下为什么要禁止 `SELECT *`。难道简单无脑,它不香吗?
 
 主要两点:
 
@@ -870,25 +870,25 @@ SELECT id, user_id, ip, op_data, attr1, attr2, attr3, attr4, attr5, attr6, attr7
 
 查看数据表的行格式:
 
-```mysql
+```sql
 show table status like 库名
 ```
 
 查看库的字符集:
 
-```mysql
+```sql
 show database status from 库名
 ```
 
 查看表中所有列的字符集:
 
-```mysql
+```sql
 show full columns from 表名
 ```
 
 更改表编码(字符集)**和表中所有字段**的编码(字符集):
 
-```mysql
+```sql
 ALTER TABLE TABLE_NAME CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ```
 
@@ -896,7 +896,7 @@ ALTER TABLE TABLE_NAME CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_
 
 查询某个数据库所有表名的语句:
 
-```mysql
+```sql
 SELECT TABLE_NAME from information_schema.`TABLES` WHERE TABLE_SCHEMA = 'DATABASE_NAME';
 ```
 
@@ -926,7 +926,7 @@ mysql 建立索引时,数据库计算key的长度是累加所有index用到的�
 - utf8mb4 = 4byte = 1character
 - gbk = 2 byte = 1 character
 
-```mysql
+```sql
 CREATE TABLE `xxl_job_registry` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `registry_group` varchar(50) NOT NULL,
@@ -945,7 +945,7 @@ registry_key 190 * 4 = 760因此创建成功
 
 如果是联合索引时,应该是两个索引的字节加起来,然后折算成字节数。
 
-```mysql
+```sql
 CREATE TABLE `xxl_job_registry` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `registry_group` varchar(50) NOT NULL,
@@ -968,7 +968,7 @@ CREATE TABLE `xxl_job_registry` (
 
 1. 修改索引的varchar字符,只要让字符 \* 字节数 < 767 即可。但是有时某个字段的字符数是一定要足够大的,那就用第二种方式。
 
-2. ```mysql
+2. ```sql
    // 查看
 
    show variables like "innodb_large_prefix";
@@ -999,13 +999,13 @@ CREATE TABLE `xxl_job_registry` (
 
 a:
 
-```mysql
+```sql
 select count(*) from world.city where id > 5;
 ```
 
 b:
 
-```mysql
+```sql
 select (select count(*) from world.city) – count(*) from world.city where id <= 5;
 ```
 
@@ -1044,13 +1044,13 @@ a语句当行数超过11行的时候需要扫描的行数比b语句要多,b语�
 
 如:
 
-```mysql
+```sql
 SELECT * FROM T1 WHERE F1/2=100
 ```
 
 应改为:
 
-```mysql
+```sql
 SELECT * FROM T1 WHERE F1=100*2
 ```
 
@@ -1076,13 +1076,13 @@ SELECT * FROM T1 WHERE F1=100*2
 
 1:
 
-```mysql
+```sql
 SELECT SUM(T1.C1) FROM T1 WHERE (SELECT COUNT(*)FROM T2 WHERE T2.C2=T1.C2>0)
 ```
 
 2:
 
-```mysql
+```sql
 SELECT SUM(T1.C1) FROM T1WHERE EXISTS(SELECT * FROM T2 WHERE T2.C2=T1.C2)
 ```
 
@@ -1092,13 +1092,13 @@ SELECT SUM(T1.C1) FROM T1WHERE EXISTS(SELECT * FROM T2 WHERE T2.C2=T1.C2)
 
 如:
 
-```mysql
+```sql
 IF (SELECT COUNT(*) FROM table_name WHERE column_name = ‘xxx’)
 ```
 
 可以写成:
 
-```mysql
+```sql
 IF EXISTS (SELECT * FROM table_name WHERE column_name = ‘xxx’)
 ```
 
@@ -1110,13 +1110,13 @@ IF EXISTS (SELECT * FROM table_name WHERE column_name = ‘xxx’)
 
 ### 必要时强制查询优化器使用某个索引
 
-```mysql
+```sql
 SELECT * FROM T1 WHERE nextprocess = 1 AND processid IN (8,32,45)
 ```
 
 改成:
 
-```mysql
+```sql
 SELECT * FROM T1 (INDEX = IX_ProcessID) WHERE nextprocess = 1 AND processid IN (8,32,45)
 ```
 
@@ -1128,13 +1128,13 @@ SELECT * FROM T1 (INDEX = IX_ProcessID) WHERE nextprocess = 1 AND processid IN (
 
 如:
 
-```mysql
+```sql
 SELECT * FROM orders WHERE (customer_num=104 AND order_num>1001) OR order_num=1008
 ```
 
 解决办法可以使用并集来避免顺序存取:
 
-```mysql
+```sql
  SELECT * FROM orders WHERE customer_num=104 AND order_num>1001 UNION SELECT * FROM orders WHERE order_num=1008
 ```
 
@@ -1146,7 +1146,7 @@ SELECT * FROM orders WHERE (customer_num=104 AND order_num>1001) OR order_num=10
 
 见如下例子:
 
-```mysql
+```sql
 SELECT * FROM T1 WHERE NAME LIKE ‘%L%’ SELECT * FROM T1 WHERE SUBSTING(NAME,2,1)=’L’ SELECT * FROM T1 WHERE NAME LIKE ‘L%’
 ```
 
@@ -1195,7 +1195,7 @@ UNION ALL不执行SELECT DISTINCT函数,这样就会减少很多不必要的资�
 
 程序中如果一次性对同一个表插入多条数据,比如以下语句:
 
-```mysql
+```sql
 insert into person(name,age) values(‘xboy’, 14);
 insert into person(name,age) values(‘xgirl’, 15);
 insert into person(name,age) values(‘nia’, 19);
@@ -1203,7 +1203,7 @@ insert into person(name,age) values(‘nia’, 19);
 
 把它拼成一条语句执行效率会更高:
 
-```mysql
+```sql
 insert into person(name,age) values(‘xboy’, 14), (‘xgirl’, 15),(‘nia’, 19);
 ```
 
@@ -1211,7 +1211,7 @@ insert into person(name,age) values(‘xboy’, 14), (‘xgirl’, 15),(‘nia�
 
 不要在选择的栏位上放置索引,这是无意义的。应该在条件选择的语句上合理的放置索引,比如where、order by。
 
-```mysql
+```sql
 SELECT id,title,content,cat_id FROM article WHERE cat_id = 1;
 ```
 
@@ -1221,7 +1221,7 @@ SELECT id,title,content,cat_id FROM article WHERE cat_id = 1;
 
 ORDER BY + LIMIT组合的索引优化。如果一个SQL语句形如:
 
-```mysql
+```sql
 SELECT [column1],[column2],…. FROM [TABLE] ORDER BY [sort] LIMIT [offset],[LIMIT];
 ```
 
@@ -1229,7 +1229,7 @@ SELECT [column1],[column2],…. FROM [TABLE] ORDER BY [sort] LIMIT [offset],[LIM
 
 b. WHERE + ORDER BY + LIMIT组合的索引优化,形如:
 
-```mysql
+```sql
 SELECT [column1],[column2],…. FROM [TABLE] WHERE [columnX] = [VALUE] ORDER BY [sort] LIMIT [offset],[LIMIT];
 ```
 
@@ -1237,7 +1237,7 @@ SELECT [column1],[column2],…. FROM [TABLE] WHERE [columnX] = [VALUE] ORDER BY 
 
 更高效的方法是建立一个联合索引(columnX,sort)。WHERE + IN + ORDER BY + LIMIT组合的索引优化,形如:
 
-```mysql
+```sql
 SELECT [column1],[column2],…. FROM [TABLE] WHERE [columnX] IN ([value1],[value2],…) ORDER BY [sort] LIMIT [offset],[LIMIT];
 ```
 
@@ -1245,7 +1245,7 @@ SELECT [column1],[column2],…. FROM [TABLE] WHERE [columnX] IN ([value1],[value
 
 WHERE+ORDER BY多个栏位+LIMIT,比如:
 
-```mysql
+```sql
 SELECT * FROM [table] WHERE uid=1 ORDER x,y LIMIT 0,10;
 ```
 
@@ -1309,7 +1309,7 @@ change buffer: 写缓冲区,是针对二级索引(辅助索引)页的更新优�
 
 ![image-20230905135508966](https://cdn.jsdelivr.net/gh/chou401/pic-md@main/img/image-20230905135508966.png)
 
-写缓冲区,仅适用于非唯一普通索引页,为什么？
+写缓冲区,仅适用于非唯一普通索引页,为什么?
 
 - 如果在索引设置唯一性,在进行修改时,InnoDB 必须要做唯一性校验,因此必须查询磁盘,做一次 IO 操作。会直接将记录查询到 BufferPool 中,然后在缓冲池修改,不会在 change buffer 操作。
 
@@ -1342,7 +1342,7 @@ LRU = least recently used(最近最少使用): 就是末位淘汰法,新数据�
 
 ![image-20230905152906765](https://cdn.jsdelivr.net/gh/chou401/pic-md@main/img/image-20230905152906765.png)
 
-冷数据区的数据页什么时候会被转到热数据区？
+冷数据区的数据页什么时候会被转到热数据区?
 
 1. 如果该数据页在 LRU 链表中存在时间超过 1s,就将其移动到链表头部(链表指的是整个 LRU 链表)
 2. 如果该数据页在 LRU 链表中存在的时间短于 1s,其位置不变(由于全表扫描有一个特点,就是它对某个页的频繁访问总耗时会很短)
@@ -1427,7 +1427,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    - 这是最基本的索引类型,基于普通字段建立的索引,没有任何限制。
 
-   - ```mysql
+   - ```sql
       CREATE INDEX <索引的名字> ON tablename(字段名)
       ALTER TABLE tablename ADD INDEX [索引的名字](字段名)
       CREATE TABLE tablename ([...],INDEX [索引的名字](字段名))
@@ -1437,7 +1437,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    - 与“普通索引”类似,不同的就是: 索引字段的值必须唯一,但允许有空值。
 
-   - ```mysql
+   - ```sql
       CREATE UNIQUE INDEX <索引的名字> ON tablename(字段名)
      ALTER TABLE tablename ADD UNIQUE INDEX [索引的名字](字段名)
      CREATE TABLE tablename ([...],UNIQUE [索引的名字](字段名))
@@ -1447,7 +1447,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    - 它是一种特殊的唯一索引,不允许有空值。在创建或修改表时追加主键约束即可,每个表只能有一个主键。
 
-   - ```mysql
+   - ```sql
       CREATE TABLE tablename ([...],PRIMARY KEY [索引的名字](字段名))
      ALTER TABLE tablename ADD PRIMARY KEY(字段名)
       ```
@@ -1455,7 +1455,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    - 用户可以在多个列上建立索引,这种索引叫做组复合索引(组合索引)。复合索引可以代替多个单一索引,相比多个单一索引复合索引所需的开销更小。
 
-   - ```mysql
+   - ```sql
       CREATE INDEX <索引的名字> ON tablename(字段名1,字段 2...)
      ALTER TABLE tablename ADD INDEX [索引的名字](字段名1,字段 2...)
      CREATE TABLE tablename ([...],INDEX [索引的名字](字段名1,字段 2...))
@@ -1471,7 +1471,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    在 MySQL5.6 以前的版本,只有 MyISAM 存储引擎支持全文索引,从MySQL5.6 开始 MyISAM 和 InnoDB 存储引擎均支持。
 
-  ```mysql
+  ```sql
    CREATE FULLTEXT INDEX <索引的名字> ON tablename(字段名)
    ALTER TABLE tablename ADD FULLTEXT [索引的名字](字段名)
    CREATE TABLE tablename ([...],FULLTEXT KEY [索引的名字](字段名))
@@ -1479,7 +1479,7 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
    全文索引方式有自然语言检索`IN NATURAL LANGUAGE MODE`和布尔检索`IN BOOLEAN MODE`两种,和常用的 like 模糊查询不同,全文索引有自己的语法格式,使用 match 和 against 关键字。
 
-    ```mysql
+    ```sql
    SELECT \* FROM users3 WHERE MATCH(NAME) AGAINST('aabb');
    -- \* 表示通配符,只能在词后面
    SELECT \* FROM users3 WHERE MATCH(NAME) AGAINST('aa\_' IN BOOLEAN MODE);
@@ -1501,11 +1501,11 @@ InnoDB 主键使用的是聚簇索引,MyISAM 不管是主键索引,还是二级�
 
 需求: 查询 users 表中“名字第一个字是张,年龄为 10 岁的所有记录”。
 
-```mysql
+```sql
 select * from users where user_name like '张%' and user_age = 10;
 ```
 
-根据最左前缀原则,该语句在搜索索引树的时候,只能匹配到名字第一个字是‘张’的记录,接下来是怎么处理的呢？当然就是从该记录开始,逐个回表,到主键索引上找出相应的记录,在比对 age 这个字段的值是否符合。
+根据最左前缀原则,该语句在搜索索引树的时候,只能匹配到名字第一个字是‘张’的记录,接下来是怎么处理的呢?当然就是从该记录开始,逐个回表,到主键索引上找出相应的记录,在比对 age 这个字段的值是否符合。
 
 MySQL5.6 引入了索引下推优化,可以在索引遍历过程中,对索引中包含的字段先做判断,过滤掉不符合条件的记录,减少回表次数。
 
@@ -1527,13 +1527,13 @@ AHI 是针对B+树 Search Path 的优化,因此所有会涉及到 Search Path �
 
 InnoDB 的自适应 Hash 索引是默认开启的,可以通过配置下面的参数设置进行关闭。
 
-```mysql
+```sql
 innodb_adaptive_hash_index = off
 ```
 
 自适应 Hash 索引使用分片进行实现的,分片数可以使用配置参数设置
 
-```mysql
+```sql
 innodb_adaptive_hash_index_parts = 8
 ```
 
@@ -1543,20 +1543,20 @@ like 查询为范围查询,%出现在左边,则索引失效。%出现在右边�
 
 场景 1: 两边都有%或者字段左边有%,索引失效
 
-```mysql
+```sql
 select * from users where user_name like '%tom%';
 select * from users where user_name like '%tom';
 ```
 
 场景 2: 字段右边有%,索引生效
 
-```mysql
+```sql
 select * from users where user_name like 'tom%';
 ```
 
 解决%出现在左边索引失效的方法,使用覆盖索引。
 
-```mysql
+```sql
 select user_name from users where user_name likt '%tom%';
 ```
 
@@ -1667,9 +1667,9 @@ InnoDB 适用场景
 
 两种引擎如何选择
 
-- 是否需要事务？有,InnoDB
-- 是否存在并发修改？有,InnoDB
-- 是否追求快速查询,且数据修改少？是,MyISAM
+- 是否需要事务?有,InnoDB
+- 是否存在并发修改?有,InnoDB
+- 是否追求快速查询,且数据修改少?是,MyISAM
 - 在绝大多数情况下,推荐使用 InnoDB
 
 ### B树和B+树的区别是什么
@@ -1817,7 +1817,7 @@ explain 使用方式: explain + sql 语句
 
 一般的分页查询使用简单的 limit 子句就可以实现。limit 格式如下:
 
-```mysql
+```sql
 select * from 表名 limit [offset,] rows
 ```
 
@@ -1825,9 +1825,9 @@ select * from 表名 limit [offset,] rows
 - 第二个参数指定返回记录行的最大数目
 - 如果只给定一个参数,它表示返回最大的记录行数目
 
-**思考 1: 如果偏移量固定,返回记录量对执行时间有什么影响？**
+**思考 1: 如果偏移量固定,返回记录量对执行时间有什么影响?**
 
-```mysql
+```sql
 select * from user limit 10000,1;
 select * from user limit 10000,10;
 select * from user limit 10000,100;
@@ -1837,9 +1837,9 @@ select * from user limit 10000,10000;
 
 结果: 在查询记录时,返回记录量低于 100 条,查询时间基本没有变化,差距不大。随着查询记录量越大,所花费的时间也会越来越多。
 
-**思考 2: 如果查询偏移量变化,返回记录数固定对执行时间有什么影响？**
+**思考 2: 如果查询偏移量变化,返回记录数固定对执行时间有什么影响?**
 
-```mysql
+```sql
 select * from user limit 1,100;
 select * from user limit 10,100;
 select * from user limit 100,100;
@@ -1855,13 +1855,13 @@ select * from user limit 10000,100;
 
 直接进行 limit 操作,会产生全表扫描,速度很慢,limit 限制的是从结果集的 M 位置处取出 N 条输出,其余抛弃。假设 id 是连续递增的,我们根据查询的页数和查询的记录数可以算出查询的 id 范围,然后配合 limit 使用
 
-```mysql
+```sql
 explain select * from user where id >= 100001 limit 100;
 ```
 
 优化 2: 利用子查询优化
 
-```mysql
+```sql
 # 首先定位偏移位置的 id
 select id from user_contacts limit 100000,1;
 # 根据获取到的 id 值向后查询
@@ -1957,12 +1957,12 @@ MySQL 慢查询的相关参数:
 
    10. 合理设计并利用索引
 
-       如果判定是否需要创建索引？
+       如果判定是否需要创建索引?
        1. 较为频繁的作为查询条件的字段应该创建索引。
-       2. 唯一性太差的字段不适合单独创建索引,即使频繁作为查询条件。(唯一性太差的字段主要是指哪些呢？如状态字段、类型字段等等这些字段中的数据可能总共就是那么几个几十个数值重复使用)(当一条 query 所返回的数据超过了全表的 15%的时候,就不应该再使用索引扫描来完成这个 query 了)。
+       2. 唯一性太差的字段不适合单独创建索引,即使频繁作为查询条件。(唯一性太差的字段主要是指哪些呢?如状态字段、类型字段等等这些字段中的数据可能总共就是那么几个几十个数值重复使用)(当一条 query 所返回的数据超过了全表的 15%的时候,就不应该再使用索引扫描来完成这个 query 了)。
        3. 更新非常频繁的字段不适合创建索引。(因为索引中的字段被更新的时候,不仅仅需要更新表中的数据,同时还要更新索引数据,以确保所以信息是正确的)。
        4. 不会出现在 where 子句中的字段不该创建索引。
-       如果选择合适索引？
+       如果选择合适索引?
        1. 对于单键索引,尽量选择针对当前 query 过滤性更好的索引。
        2. 选择联合索引时,当前 query 中过滤性最好的字段在索引字段顺序中排列要靠前。
        3. 选择联合索引时,尽量索引字段出现在 where 中比较多的索引。
@@ -1998,7 +1998,7 @@ BufferPool 参数优化
 
    建议: 在专用数据库服务器上,可以将缓冲池大小设置为服务器物理内存的 60%-80%。
 
-   ```mysql
+   ```sql
    # 查看 BufferPool 缓冲池大小
    show variables like '%innodb_buffer_pool_size%';
    # 调整 BufferPool 缓冲池大小
@@ -2079,7 +2079,7 @@ BufferPool 参数优化
 
 #### 优化建议
 
-如何设置合适的日志文件大小？
+如何设置合适的日志文件大小?
 
 - 根据实际生产场景的优化经验,一般是计算一段时间内生成的事务日志(redo log)的大小,而 MySQL 的日志文件大小最少应该承载一个小时的业务日志量(官网文档中有说明)。
 
@@ -2089,7 +2089,7 @@ BufferPool 参数优化
 >
 > 自系统修改开始,就不断的生成 redo 日志,为了记录一共生成了多少日志,于是 MySQL 设计了全局变量 Log SequenceNumber,简称 lsn,但不是从 0 开始,是从 8704 字节开始。
 
-```mysql
+```sql
 # pager 分页工具,只获取 sequence 的信息
 mysql> pager grep sequence;
 PAGER set to 'grep sequence'
@@ -2112,7 +2112,7 @@ PAGER set to stdout
 
 有了一分钟的日志量,据此推算一小时内的日志量
 
-```mysql
+```sql
 mysql> select (21803964 - 21799672) / 1024 as kb_per_min;
 +------------+
 | kb_per_min |
@@ -2144,7 +2144,7 @@ MySQL 查询缓存会保存查询返回的完整结果。当查询命中该缓�
 
 #### 查看查询缓存是否开启
 
-```mysql
+```sql
 # 查询是否支持查询缓存
 mysql> show variables like 'have_query_cache';
 +------------------+-------+
@@ -2197,7 +2197,7 @@ MySQL 数据库数据变化相对不多,query_cache_size 一般设置为 256MB �
 
 该参数是 InnoDB 存储引擎用来控制 Buffer pool 中脏页的百分比,当脏页数量占比超过这个参数设置的值时,InnoDB 会启动刷脏页的操作。
 
-```mysql
+```sql
 -- innodb_max_dirty_pages_pct 参数可以动态调整,最小值为 0,最大值为 99.99
 mysql> show variables like 'innodb_max_dirty_pages_pct';
 +----------------------------+-----------+
@@ -2214,7 +2214,7 @@ mysql> show variables like 'innodb_max_dirty_pages_pct';
 
 `innodb_old_blocks_pct` 用来确定 LRU 链表中 old sublist 所占比例,默认占用 37%。
 
-```mysql
+```sql
 mysql> show variables like '%innodb_old_blocks_pct%';
 +-----------------------+-------+
 | Variable_name         | Value |
@@ -2226,7 +2226,7 @@ mysql> show variables like '%innodb_old_blocks_pct%';
 
 `innodb_old_blocks_time` 用来控制 old sublist 中 page 的转移策略,新的 page 页在进入 LRU 链表中时,会先插入到 old sublist 的头部,然后 page 需要在 old sublist 中停留 innodb_old_blocks_time 这么久后,下一次对该 page 的访问才会使其移动到 new sublist 的头部,默认值1 秒。
 
-```mysql
+```sql
 mysql> show variables like '%innodb_old_blocks_time%';
 +------------------------+-------+
 | Variable_name          | Value |
@@ -2252,7 +2252,7 @@ InnoDB 的页和操作系统的页大小不一致,InnoDB 页大小一般为 16K,
 
 默认情况下启用双写缓冲区,如果要禁用 Doublewrite 缓冲区,可以将`innodb_doublewrite`设置为 0.
 
-```mysql
+```sql
 mysql> show variables like '%innodb_doublewrite%';
 +-------------------------------+-------+
 | Variable_name                 | Value |
@@ -2289,7 +2289,7 @@ mysql> show variables like '%innodb_doublewrite%';
 
    查询 MySQL 使用的行格式,默认为 Dynamic。
 
-   ```mysql
+   ```sql
    mysql> show variables like 'innodb_default_row_format';
    +---------------------------+---------+
    | Variable_name             | Value   |
@@ -2301,7 +2301,7 @@ mysql> show variables like '%innodb_doublewrite%';
 
    指定行格式写法
 
-  ```mysql
+  ```sql
   CREATE TABLE <table_name(column_name)> ROW_FORMAT=行格式名称
   ALTER TABLE <table_name> ROW_FORMAT=行格式名称
   ```
@@ -2466,7 +2466,7 @@ mysql> show variables like '%innodb_doublewrite%';
 
 3. **Block Nested-Loop Join(块嵌套循环连接)**
 
-   如果 Join 的字段有索引,MySQL 会使用 INL 算法,如果没有的话,MySQL 会如何处理？
+   如果 Join 的字段有索引,MySQL 会使用 INL 算法,如果没有的话,MySQL 会如何处理?
 
    因为不存在索引了,所以驱动表需要进行扫描。这里MySQL 并不会简单粗暴的应用 SNL 算法,而是加入了 buffer 缓冲区,降低了内循环的个数,也就是被驱动表的扫描次数。
 
@@ -2478,7 +2478,7 @@ mysql> show variables like '%innodb_doublewrite%';
 
    - MySQL 默认 buffer 大小 256k,如果有 n 个 join 操作,会生成 n-1 个 join buffer。
 
-     ```mysql
+     ```sql
      mysql> show variables like '%join_buffer%';
      +------------------+--------+
      | Variable_name    | Value  |

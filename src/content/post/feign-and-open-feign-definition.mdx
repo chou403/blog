@@ -393,7 +393,7 @@ hystrix:
 >
 > @FeignClient: 标记要用 openfeign 来拦截的请求接口
 
-为什么 Service-B 服务中定义了一个 ServiceAClient 接口(继承自 Service-A 的 api 接口),某 Controller 或 Service 中通过 @Autowired 注入一个 ServiceAClient 接口的实例,就可以通过 openfeign 做负载均衡去调用 Service-A服务？
+为什么 Service-B 服务中定义了一个 ServiceAClient 接口(继承自 Service-A 的 api 接口),某 Controller 或 Service 中通过 @Autowired 注入一个 ServiceAClient 接口的实例,就可以通过 openfeign 做负载均衡去调用 Service-A服务?
 
 ### @FeignClient解析
 
@@ -897,7 +897,7 @@ FeignClientFactoryBean是一个工厂,保存了@FeignClient注解的所有属性
 
 #### FeignClientFactoryBean 创建动态代理类的入口
 
-我们都知道要通过注册到 Spring 容器中的 FeignClient 的 BeanDefinition 的 beanClass 属性是 FeignClientFactoryBean,所以大概率和 FeignClientFactoryBean 是相关的,怎么找呐？连蒙带猜~
+我们都知道要通过注册到 Spring 容器中的 FeignClient 的 BeanDefinition 的 beanClass 属性是 FeignClientFactoryBean,所以大概率和 FeignClientFactoryBean 是相关的,怎么找呐?连蒙带猜~
 
 ```java
 protected Feign.Builder feign(FeignContext context) {
@@ -954,7 +954,7 @@ protected Feign.Builder feign(FeignContext context) {
 
 对于有一定开发的经验而言,见到 Target 这一类东西,基本可以确定就是动态代理。
 
-再往上追,看哪里调用了 getTarget() 方法？进入到 getObject() 方法。
+再往上追,看哪里调用了 getTarget() 方法?进入到 getObject() 方法。
 
 ```java
 public Object getObject() throws Exception {
@@ -968,7 +968,7 @@ public Object getObject() throws Exception {
 
 #### Feign.Builder的构建过程
 
-上面我们得出结论: FeignClient 是通过 Feign.Builder 来构建的,生成 FeignClient 动态代理的入口是 FeignClientFactoryBean#getObject(),这里我们看一下 Feign.Builder 是如何构建的？
+上面我们得出结论: FeignClient 是通过 Feign.Builder 来构建的,生成 FeignClient 动态代理的入口是 FeignClientFactoryBean#getObject(),这里我们看一下 Feign.Builder 是如何构建的?
 
 ##### FeignContext 上下文的获取
 
@@ -991,7 +991,7 @@ FeignClient 也是类似的上下文:
 >
 > - 因此,可以对不同的@FeignClient自定义不同的Configuration。
 
-**FeignContext在哪里注入到Spring容器的？**
+**FeignContext在哪里注入到Spring容器的?**
 FeignClient 位于 spring-cloud-openfeign-core 项目,我们在这个项目下结合 SpringBoot 自动装配的特性找 XxxAutoConfiguration 和 XxxConfiguration,最终找到 FeignAutoConfiguration。
 
 ![202403011646192](https://cdn.jsdelivr.net/gh/chou401/pic-md@main//img/202403011646192.png)
@@ -1314,9 +1314,9 @@ public MethodHandler create(Target<?> target,
 
 > 针对 FeignClient 接口中的每个标注了 springMVC 注解的方法都会被 springMvcContract 组件解析,针对每个方法最后都生成一个 MethodMetadata,代表方法的一些元数据,包括:
 >
-> 1. 方法的定义: 比如: ServiceAClient#deleteUser(Long)
-> 2. 方法的返回类型: 比如: class java.lang.String
-> 3. 发送 HTTP 请求的模版: 比如: DELETE /user/{id} HTTP/1.1
+> 1. 方法的定义: 比如: `ServiceAClient#deleteUser(Long)`
+> 2. 方法的返回类型: 比如: `class java.lang.String`
+> 3. 发送 HTTP 请求的模版: 比如: `DELETE /user/{id} HTTP/1.1`
 
 ###### SpringMvcContract组件的工作原理
 
@@ -1328,12 +1328,12 @@ public MethodHandler create(Target<?> target,
 
 解析逻辑如下:
 
-> 1. 解析@RequestMapping注解,看看里面的method属性是什么？是GET/UPDATE/DELETE,然后在HTTP template里就加上GET/UPDATE/DELETE;(示例为DELETE)
+> 1. 解析@RequestMapping注解,看看里面的method属性是什么?是GET/UPDATE/DELETE,然后在HTTP template里就加上GET/UPDATE/DELETE;(示例为DELETE)
 > 2. 找到接口上定义的@RequestMapping注解,解析里面的value值,拿到请求路径(/user),此时HTTP template变成: DELETE /user
-> 3. 再次解析deleteUser()方法上的@RequestMapping注解,找到里面的value,获取到/{id},拼接到HTTP template里去: DELETE /user/{id}
-> 4. 接着硬编码拼死一个HTTP协议,http 1.1,HTTP template: DELETE /user/{id} HTTP/1.1
+> 3. 再次解析deleteUser()方法上的@RequestMapping注解,找到里面的value,获取到 `/{id}`,拼接到HTTP template里去: `DELETE /user/{id}`
+> 4. 接着硬编码拼死一个HTTP协议,http 1.1,HTTP template: `DELETE /user/{id} HTTP/1.1`
 > 5. indexToName: 解析@PathVariable注解,第一个占位符(index是0)要替换成方法入参里的id这个参数的值
-> 6. 假如后面来调用这个deleteUser()方法,传递进来的id = 1.那么此时就会拿出之前解析好的HTTP template: DELETE /user/{id} HTTP/1.1。然后用传递进来的id = 1替换掉第一个占位符的值,DELETE /user/1 HTTP/1.1
+> 6. 假如后面来调用这个deleteUser()方法,传递进来的id = 1.那么此时就会拿出之前解析好的HTTP template: `DELETE /user/{id} HTTP/1.1`。然后用传递进来的id = 1替换掉第一个占位符的值,DELETE /user/1 HTTP/1.1
 
 ### OpenFeign处理HTTP请求
 
@@ -1477,7 +1477,7 @@ private Object expandElements(Expander expander, Object value) {
 
 `RequestTemplate resolve(Map<String, ?> variables)` 中负责解析并构建完整的 RequestTemplate,进到方法中的 urlTemplate 为 `/user/sayHello/{id}`,variables 为上面的 varBuilder: `{"id":1,"name":"zhangsan","age":18}`。
 
-方法中首先将 `"id":1` 替换 `urlTemplate(/user/sayHello/{id})` 中的 {id},得出 expanded 为 `/user/sayHello/1`,然后再将查询参数 `"name":"zhangsan","age":18` 拼接到请求中,得到最终的 URL 为: `/user/sayHello/1?name=zhangsan&age=18`,返回的 RequestTemplate 内容为:
+方法中首先将 `"id":1` 替换 `urlTemplate(/user/sayHello/{id})` 中的 `{id}`,得出 expanded 为 `/user/sayHello/1`,然后再将查询参数 `"name":"zhangsan","age":18` 拼接到请求中,得到最终的 URL 为: `/user/sayHello/1?name=zhangsan&age=18`,返回的 RequestTemplate 内容为:
 
 `buildTemplateFromArgs.create(argv)` 方法执行完成之后,得到一个完整的 RequestTemplate,下面需要基于这个 RequestTemplate 来执行请求。
 
@@ -1545,9 +1545,9 @@ public Response execute(Request request, Request.Options options) throws IOExcep
 > 4. 根据服务名从SpringClientFactory(Feign上下文)中获取Ribbon相关的配置IClientConfig,比如(连接超时时间、读取数据超时时间),如果获取不到,则创建一个FeignOptionsClientConfig
 > 5. 最后根据服务名从CachingSpringLoadBalancerFactory获取对应的FeignLoadBalancer;在FeignLoadBalancer里封装了ribbon的ILoadBalancer
 
-既然Feign中集成了Ribbon,那它们是怎么整合到一起的？FeignLoadBalancer中用了Ribbon的那个ILoadBalancer？Feign如何使用Ribbon进行负载均衡？最终发送出去的请求URI是什么样的？
+既然Feign中集成了Ribbon,那它们是怎么整合到一起的?FeignLoadBalancer中用了Ribbon的那个ILoadBalancer?Feign如何使用Ribbon进行负载均衡?最终发送出去的请求URI是什么样的?
 
-**1> Feign 是如何和 Ribbon、eureka 整合在一起的？FeignLoadBalancer 中用了 Ribbon 的那个 ILoadBalancer？**
+**1> Feign 是如何和 Ribbon、eureka 整合在一起的?FeignLoadBalancer 中用了 Ribbon 的那个 ILoadBalancer?**
 
 1. FeignLoadBalancer中用了Ribbon的那个ILoadBalancer?
 
@@ -1582,7 +1582,7 @@ public Response execute(Request request, Request.Options options) throws IOExcep
    小结:
    在spring boot启动,要去获取一个ribbon的ILoadBalancer的时候,会去从那个服务对应的一个独立的spring容器(Ribbon子上下文)中获取;获取到一个服务对应的ZoneAwareLoadBalancer,其中组合了DomainExtractingServerList,DomainExtractingServerList自己会去eureka的注册表里去拉取服务对应的注册表(即: 服务的实例列表)。
 
-**2> Feign如何使用Ribbon进行负载均衡？**
+**2> Feign如何使用Ribbon进行负载均衡?**
 feign是基于ribbon的ZoneAwareLoadBalancer来进行负载均衡的,从一个server list中选择出来一个server。
 
 接着上面的内容,进入到FeignLoadBalancer的executeWithLoadBalancer()方法;
@@ -1622,7 +1622,7 @@ selectServer()方法逻辑解析:
 
 选择出一个Server之后,再去调用ServerOperation.call()方法,由call()方法拼接出最终的请求URI,发送http请求;
 
-**3> 最终发送出去的请求URI是什么样的？**
+**3> 最终发送出去的请求URI是什么样的?**
 ServerOperation#call()方法里负责发送请求,在executeWithLoadBalancer()方法中重写了LoadBalancerCommand#command()方法中入参ServerOperation的call()方法;
 
 ![202403071648955](https://cdn.jsdelivr.net/gh/chou401/pic-md@main//img/202403071648955.png)
@@ -1728,7 +1728,7 @@ public interface Decoder {
 }
 ```
 
-###### 默认情况下,Feign接收到服务返回的结果后,如何处理？
+###### 默认情况下,Feign接收到服务返回的结果后,如何处理?
 
 即: 未指定decoder时,会直接使用AsyncResponseHandler#handleResponse()方法处理接收到的服务返回结果:
 
@@ -1800,12 +1800,12 @@ deocode()方法中会用到一个Decoder,decoder默认是OptionalDecoder,针对J
 **区别主要体现在这里:**
 在注册FeignClient到Spring容器时,构建的BeanDefinition的beanClas是FeignClientFactoryBean;FeignClientFactoryBean是一个工厂,保存了@FeignClient注解的所有属性值,在Spring容器初始化的过程中,其会根据之前扫描出的FeignClient信息构建FeignClient的动态代理类。
 
-**底层通信Client的区别？**
+**底层通信Client的区别?**
 在使用Feign.Builder构建FeignClient的时候,获取到的Client是FeignBlockingLoadBalancerClient(这其中的逻辑后面聊,在OpenFeign低版本是LoadBalancerFeignClient);用于生成FeignClient的Targeter是DefaultTargeter(在OpenFeign低版本是HystrixTargeter,高版本移除了Hystrix,采用Spring Cloud Circuit Breaker 做限流熔断);
 
 具体体现在FeignClientFactoryBean#loadBalance()方法,其是一个进行负载均衡的FeignClient动态代理生成方法;
 
-**1> FeignBlockingLoadBalancerClient何时注入到Spring容器？**
+**1> FeignBlockingLoadBalancerClient何时注入到Spring容器?**
 
 FeignBlockingLoadBalancerClient注入到Spring容器的方式和OpenFeign低版本的LoadBalancerFeignClient是一样的;
 

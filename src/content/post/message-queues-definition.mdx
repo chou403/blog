@@ -1243,7 +1243,7 @@ ISR (In-Sync Replicas),这个是指副本同步队列。副本数对Kafka的吞�
 
 ![image-20210918150431039](https://cdn.jsdelivr.net/gh/chou401/pic-md@main/img/image202304051925825.png)
 
-**为什么在Kafka 0.9.0.0版本后移除了replica.lag.max.messages参数而只保留了replica.lag.time.max.ms作为ISR中副本管理的参数呢？**
+**为什么在Kafka 0.9.0.0版本后移除了replica.lag.max.messages参数而只保留了replica.lag.time.max.ms作为ISR中副本管理的参数呢?**
 
 replica.lag.max.messages表示当前某个副本落后leader的消息数量超过了这个参数的值,那么leader就会把follower从ISR中删除。假设设置replica.lag.max.messages=4,那么如果producer一次传送至broker的消息数量都小于4条时,因为在leader接受到producer发送的消息之后而follower副本开始拉取这些消息之前,follower落后leader的消息数不会超过4条消息,故此没有follower移出ISR,所以这时候replica.lag.max.message的设置似乎是合理的。但是producer发起瞬时高峰流量,producer一次发送的消息超过4条时,也就是超过replica.lag.max.messages,此时follower都会被认为是与leader副本不同步了,从而被踢出了ISR。但实际上这些follower都是存活状态的且没有性能问题。那么在之后追上leader,并被重新加入了ISR。于是就会出现它们不断地剔出ISR然后重新回归ISR,这无疑增加了无谓的性能损耗。而且这个参数是broker全局的。设置太大了,影响真正"落后"follower的移除;设置的太小了,导致follower的频繁进出。无法给定一个合适的replica.lag.max.messages的值,故此,新版本的Kafka移除了这个参数。
 
@@ -1533,13 +1533,13 @@ Producer 使用轮询的方式分别向每个 Queue 中发送消息。
 
 Consumer 启动的时候会在 Topic,Consumer group 维度发生负载均衡,为每个客户端分配需要处理的 Queue。负载均衡过程中每个客户端都获取到全部的的 ConsumerID 和所有 Queue 并进行排序,每个客户端使用相同负责均衡算法,例如平均分配的算法,这样每个客户端都会计算出自己需要消费那些 Queue,每当 Consumer 增加或减少就会触发负载均衡,所以我们可以通过 RocketMQ 负载均衡机制实现动态扩容,提升客户端收发消息能力。客户端负责均衡为客户端分配好 Queue 后,客户端会不断向 Broker 拉取消息,在客户端进行消费。
 
-**可以一直增加客户端的数量提升消费能力吗**？
+**可以一直增加客户端的数量提升消费能力吗**?
 
 当然不可以,因为 Queue 数量有限,客户端数量一旦达到 Queue 数量,再扩容新节点无法提升消费能力,因为会有节点分配不到 Queue 而无法消费。
 
 ##### Consumer 端的负载均衡机制
 
-topic 在创建之处可以设置 consumer queue数量。而 consumer 在启动时会和comsumer queue绑定,这个绑定策略是咋样的？
+topic 在创建之处可以设置 consumer queue数量。而 consumer 在启动时会和comsumer queue绑定,这个绑定策略是咋样的?
 
 ![img](https://cdn.jsdelivr.net/gh/chou401/pic-md@main/img/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA572X5b-X5a6P,size_20,color_FFFFFF,t_70,g_se,x_16-20240130120814864.png)
 
@@ -1572,7 +1572,7 @@ RocketMQ 底层对 commitLog、consumeQueue 之类的磁盘文件的读写操作
 
 其次,还**发生了 4 次数据拷贝**,其中两次是 DMA 的拷贝,另外两次则是通过 CPU 拷贝的。
 
-**传统IO,write() 过程是怎样？**
+**传统IO,write() 过程是怎样?**
 
 write() 写请求 和 read(),需要先写入用户缓存区,然后通过系统调用,CPU 拷贝数据从用户缓存区到内核缓存区,再从内核缓存区拷贝到磁盘文件！
 
@@ -1587,8 +1587,8 @@ write() 写请求 和 read(),需要先写入用户缓存区,然后通过系统�
 
 所以,要想提高文件传输的性能,就需要**减少「用户态与内核态的上下文切换」和「内存拷贝」的次数**。
 
-**如何优化文件传输的性能？**
-先来看看,如何减少「用户态与内核态的上下文切换」的次数呢？
+**如何优化文件传输的性能?**
+先来看看,如何减少「用户态与内核态的上下文切换」的次数呢?
 
 读取磁盘数据的时候,之所以要发生上下文切换,这是因为用户空间没有权限操作磁盘或网卡,内核的权限最高,这些操作设备的过程都需要交由操作系统内核来完成,所以一般要通过内核去完成某些任务的时候,就需要使用操作系统提供的系统调用函数。
 
@@ -1596,7 +1596,7 @@ write() 写请求 和 read(),需要先写入用户缓存区,然后通过系统�
 
 所以,要想减少上下文切换到次数,就要减少系统调用的次数。
 
-**再来看看,如何减少「数据拷贝」的次数？**
+**再来看看,如何减少「数据拷贝」的次数?**
 
 在前面我们知道了,传统的文件传输方式会历经 4 次数据拷贝,而且这里面,「从内核的读缓冲区拷贝到用户的缓冲区里,再从用户的缓冲区里拷贝到 socket 的缓冲区里」,这个过程是没有必要的。
 
@@ -1636,7 +1636,7 @@ void * mmap(void *start, size_t length, int prot , int flags, int fd, off_t offs
 3. 应用进程再调用 write(),操作系统直接将内核缓冲区的数据拷贝到 socket 缓冲区中,这一切都发生在内核态,由 CPU 来搬运数据;
 4. 最后,把内核的 socket 缓冲区里的数据,拷贝到网卡的缓冲区里,这个过程是由 DMA 搬运的。
 
-**使用 mmap() 写数据到磁盘文件会怎样？**
+**使用 mmap() 写数据到磁盘文件会怎样?**
 
 mmap() 将用户虚拟地址映射内核缓存区(内存物理地址)后,写数据直接将数据写入内核缓存区,只需要经过一次CPU拷贝,将数据从内核缓存区拷贝到磁盘文件;比传统 IO 的 write() 操作少了一次数据拷贝的过程！
 
@@ -1744,7 +1744,7 @@ sendfile 配置的具体意思:
 
 当然,要使用 sendfile,Linux 内核版本必须要 2.1 以上的版本。
 
-**PageCache 有什么作用？**
+**PageCache 有什么作用?**
 
 回顾前面说道文件传输过程,其中第一步都是先需要先把磁盘文件数据拷贝「内核缓冲区」里,这个「内核缓冲区」实际上是磁盘高速缓存(PageCache)。
 
@@ -1754,7 +1754,7 @@ sendfile 配置的具体意思:
 
 但是,内存空间远比磁盘要小,内存注定只能拷贝磁盘里的一小部分数据。
 
-那问题来了,选择哪些磁盘数据拷贝到内存呢？
+那问题来了,选择哪些磁盘数据拷贝到内存呢?
 
 我们都知道程序运行的时候,具有「局部性」,所以通常,刚被访问的数据在短时间内再次被访问的概率很高,于是我们可以用 PageCache 来缓存最近被访问的数据,当空间不足时淘汰最久未被访问的缓存。
 
@@ -1782,9 +1782,9 @@ sendfile 配置的具体意思:
 
 所以,针对大文件的传输,不应该使用 PageCache,也就是说不应该使用零拷贝技术,因为可能由于 PageCache 被大文件占据,而导致「热点」小文件无法利用到 PageCache,这样在高并发的环境下,会带来严重的性能问题。
 
-**大文件传输用什么方式实现？**
+**大文件传输用什么方式实现?**
 
-那针对大文件的传输,我们应该使用什么方式呢？
+那针对大文件的传输,我们应该使用什么方式呢?
 
 我们先来看看最初的例子,当调用 read 方法读取文件时,进程实际上会阻塞在 read 方法调用,因为要等待磁盘数据的返回,如下图:
 
@@ -1862,14 +1862,14 @@ Kafka 和 Nginx 都有实现零拷贝技术,这将大大提高文件传输的性
 
 在 Nginx 里,可以通过配置,设定一个文件大小阈值,针对大文件使用异步 IO 和直接 IO,而对小文件使用零拷贝。
 
-**Kafka为什么那么快？**
+**Kafka为什么那么快?**
 
 - 顺序读写+mmap,使用linux内核提供的mmap api,mmap将磁盘文件(设备内存)映射到内存,支持读和写,对内存的操作就会反映在磁盘文件上,但这不是实时写入磁盘的,操作系统会在程序主动调用flush的时候才真正的把数据写到硬盘(kafka也提供了一个参数——producer.type来控制是不是主动flush,如果kafaka写入到mmap之后立即flush然后返回producer叫同步,写入mmap之后立即返回producer叫异步)。
 - 零拷贝,使用linux内核提供的sendfile api,sendfile是将读到内核空间的数据,直接转到socket buffer,进行网络发送。
 
 ![img](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwMTE0MTk1MDMzNTA5?x-oss-process=image/format,png)
 
-**什么是mmap？**
+**什么是mmap?**
 
 mmap是操作这些设备的一种方法,所谓操作设备,比如IO端口(点亮一个LED)、LCD控制器、磁盘控制器,实际上就是往设备的物理地址读写数据。
 
@@ -1877,15 +1877,15 @@ mmap是操作这些设备的一种方法,所谓操作设备,比如IO端口(点�
 
 mmap的好处是,mmap把设备内存映射到虚拟内存,则用户操作虚拟内存相当于直接操作设备了,省去了用户空间到内核空间的复制过程,相对IO操作来说,增加了数据的吞吐量。
 
-**什么是内存映射？**
+**什么是内存映射?**
 
-既然mmap是实现内存映射的接口,那么内存映射是什么呢？看下图:
+既然mmap是实现内存映射的接口,那么内存映射是什么呢?看下图:
 
 ![img](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwMTE0MjAwMTMxODE1?x-oss-process=image/format,png)
 
 每个进程都有独立的进程地址空间,通过页表和MMU,可将虚拟地址转换为物理地址,每个进程都有独立的页表数据,这可解释为什么两个不同进程相同的虚拟地址,却对应不同的物理地址。
 
-**什么是虚拟地址空间？**
+**什么是虚拟地址空间?**
 
 每个进程都有4G的虚拟地址空间,其中3G用户空间,1G内核空间(linux),每个进程共享内核空间,独立的用户空间,下图形象地表达了这点
 
@@ -1899,9 +1899,9 @@ mmap的好处是,mmap把设备内存映射到虚拟内存,则用户操作虚拟�
 
 (2)硬件中断
 
-**虚拟地址空间里面是什么？**
+**虚拟地址空间里面是什么?**
 
-了解了什么是虚拟地址空间,那么虚拟地址空间里面装的是什么？看下图
+了解了什么是虚拟地址空间,那么虚拟地址空间里面装的是什么?看下图
 
 ![img](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwMTE0MjAxMzAzMzkx?x-oss-process=image/format,png)
 
